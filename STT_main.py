@@ -1,9 +1,10 @@
 ## https://console.picovoice.ai/
 
-import os, sys, json, time, random
+import os, sys, json, random
 from urllib import request
 from bs4 import BeautifulSoup
-import chatGPT
+import asyncio
+from chatGPT import callChatGPT
 
 try :
     import speech_recognition as sr                                                          
@@ -30,16 +31,40 @@ print("[대기] 잠시만 기다려주세요..")
 f = open('access_key.json')
 data = json.load(f)
 
-## TTS 사용하여 음성 출력
-def my_tts(text):
+async def my_tts(text):
     print('[AI] : ' + text)
     tts = gTTS(text=text, lang='ko')
+
+    # 임시 음성 파일 경로 설정
     file_name = 'voice.mp3'
     file_path = os.path.abspath(file_name)
+
+    # 음성 파일 저장
     tts.save(file_path)
-    playsound(file_path)
+
+    # 비동기적으로 재생
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, playsound, file_path)
+
+    # 재생 후 파일 삭제
     if os.path.exists(file_path):
         os.remove(file_path)
+
+# 예시: STT 함수 내부에서 비동기로 my_tts 호출
+async def STT():
+    r = sr.Recognizer()
+    with sr.Microphone(1) as source:
+        print('Speak Anything:')
+        audio = r.listen(source)
+        try:
+            text = r.recognize_google(audio, language='ko-KR')
+            print('You said: {}'.format(text))
+            await ai(text)  # ai 함수에서 my_tts를 호출할 때는 await 사용
+        except Exception as err:
+            print(err)
+            await my_tts("잘 못 들었어요. 다시 말해주세요.")
+            await STT()
+
 
 ### 뉴스 #############################################################
 def my_news() :                                               
@@ -95,20 +120,28 @@ def fortune():
 
     return fortune_today[0] + lst[2]
 
+async def baby(speech):
+    future1 = asyncio.ensure_future(my_tts("인공지능이 답변을 생성중입니다. 시간이 걸릴 수 있으니, 잠시 대기해주세요."))
+    future2 = asyncio.ensure_future(callChatGPT(speech))
+    
+    await asyncio.gather(future1, future2)
+    
+    await my_tts(future2.result())
+
 ### 판단 #############################################################
-def ai(speech) :                                                                                                                                                    #
+async def ai(speech) :                                                                                                                                                    #
     if '뉴스' in speech :                                                           
         texts = my_news()                                                           
-        my_tts('오늘 주요 뉴스입니다.')                                             
+        await my_tts('오늘 주요 뉴스입니다.')                                             
         for text in texts[0:5] :                                                    
-            my_tts(text)
+            await my_tts(text)
 
     elif '날씨' in speech :                                                         
-        my_tts("현재 날씨는 준비중이에요.")
-        # my_tts(weather_info())
+        await my_tts("현재 날씨는 준비중이에요.")
+        # await my_tts(weather_info())
 
     elif '운세' in speech :                                                         
-        my_tts(fortune())   
+        await my_tts(fortune())   
         
     elif '농담' in speech :                                                         
         f = open("joke.txt", "r", encoding="utf8")                                  
@@ -117,13 +150,18 @@ def ai(speech) :                                                                
         temp = lines[rnd]                                                           
         q, a = temp.split(",")                                                      
         f.close()                                                                   
-        my_tts(q)                                                                   
-        my_tts(a)                                                                   
+        await my_tts(q)                                                                   
+        await my_tts(a)
+
+    elif '아기' in speech:
+        await baby(speech)
+    
     elif '종료' in speech :                                                         
-        my_tts("다음에 또 만나요")                                                 
+        await my_tts("다음에 또 만나요")                                                 
+    
     else :                                                                          
-        my_tts("다시 한번 말씀해주세요.")
-        STT()
+        await my_tts("다시 한번 말씀해주세요.")
+        await STT()
 
 ## Wake word Setting
 porcupine = pvporcupine.create(
@@ -138,37 +176,30 @@ leopard = pvleopard.create(access_key = data['key'], model_path=os.getcwd()+"\le
 f.close()
 
 
-## Mic Setting (device_index 변경해야함)
-### devices = PvRecorder.get_available_devices()
-recorder = PvRecorder(frame_length=512, device_index=1)
-recorder.start()
-print("[준비 완료] 마이크 입력이 준비되었습니다")
+# Porcupine으로 키워드 감지 후 STT 함수 비동기 실행
+async def detect_keyword():
+    ## Mic Setting (device_index 변경해야함)
+    ### devices = PvRecorder.get_available_devices()
+    recorder = PvRecorder(frame_length=512, device_index=1)
+    recorder.start()
+    while True:
+        pcm = recorder.read()
+        keyword_index = porcupine.process(pcm)
+        if keyword_index == 0:
+            recorder.delete()
+            await my_tts("무엇을 도와드릴까요?")
+            await STT()
+            recorder = PvRecorder(frame_length=512, device_index=1)
+            recorder.start()
 
-def STT():
-    r = sr.Recognizer()
-    with sr.Microphone(1) as source:
-        print('Speack Anything :')
-        audio = r.listen(source)
-    
-        try:
-            text = r.recognize_google(audio, language='ko-KR')
-            print('You said : {}'.format(text))
-            ai(text)
-        except Exception as err:
-            print(err)
-            my_tts("잘 못 들었어요. 다시 말해주세요.")
-            STT()
+# 비동기 루프 시작
+async def main():
+    print("실행")
+    await detect_keyword()
 
-while True:
-    pcm = recorder.read()
-    keyword_index = porcupine.process(pcm)
-    if keyword_index == 0:
-        recorder.delete()
-        my_tts("무엇을 도와드릴까요?")
-        STT()
-        recorder = PvRecorder(frame_length=512, device_index=1)
-        recorder.start()
-        
+# 비동기 루프 실행
+if __name__ == '__main__':
+    asyncio.run(main())
         
         
         
