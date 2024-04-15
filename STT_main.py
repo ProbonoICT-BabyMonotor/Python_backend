@@ -54,7 +54,6 @@ async def my_tts(text):
 async def STT():
     r = sr.Recognizer()
     with sr.Microphone(1) as source:
-        print('Speak Anything:')
         audio = r.listen(source)
         try:
             text = r.recognize_google(audio, language='ko-KR')
@@ -194,7 +193,15 @@ async def detect_keyword():
 
 # 비동기 루프 시작
 async def main():
-    print("실행")
+    # 임시 음성 파일 경로 설정
+    file_name = 'turn_on.mp3'
+    file_path = os.path.abspath(file_name)
+
+    # 비동기적으로 재생
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, playsound, file_path)
+    print("[실행 가능] 마이크가 준비되었습니다")
+    
     await detect_keyword()
 
 # 비동기 루프 실행
