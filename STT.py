@@ -92,7 +92,7 @@ def callback(rec, audio) :                                                      
 
 #fortune
 #################################################################################################################################
-def fortune() :                                                                                                                 #
+def fortune():                                                                                                                 #
     url = 'https://search.naver.com/search.naver?where=nexearch&sm=tab_etc&qvt=0&query=%EB%A7%90%EB%9D%A0%20%EC%9A%B4%EC%84%B8' #
     lst = list()                                                                                                                #
     year = list()                                                                                                               #
@@ -123,17 +123,17 @@ def fortune() :                                                                 
 #################################################################################################################################
 
 #####################################################################################
-def ai(speech) :                                                                    #
-                                                                                    #
+def ai(speech) :                                                                    #                                                                                #
     if '뉴스' in speech :                                                           #
         texts = my_news()                                                           #
         my_tts('오늘 주요 뉴스입니다.')                                             #
         for text in texts[0:5] :                                                    #
             my_tts(text)                                                            #
     elif '날씨' in speech :                                                         #
-        my_tts(weather_info())                                                      #
+        my_tts(weather_info())                                                   #
     elif '운세' in speech :                                                         #
-        my_tts(fortune())                                                           #
+        my_tts(fortune())  
+        
     elif '농담' in speech :                                                         #
         f = open("joke.txt", "r", encoding="utf8")                                  #
         lines = f.readlines()                                                       #
