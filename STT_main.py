@@ -1,5 +1,14 @@
 ## https://console.picovoice.ai/
 
+#####################################################################
+## 프로그램 실행 전
+## 마이크의 Device Index를 손보기 (Speech_recongition, pvrecorder)
+## test_code > Test_mic_number.py 코드 실행하여 테스트
+##
+## 노트북 자체 마이크는 절대 안됨!! 소음 때문인지도..
+#####################################################################
+
+
 import os, sys, json, random
 from urllib import request
 from bs4 import BeautifulSoup
@@ -53,7 +62,7 @@ async def my_tts(text):
 # 예시: STT 함수 내부에서 비동기로 my_tts 호출
 async def STT():
     r = sr.Recognizer()
-    with sr.Microphone(1) as source:
+    with sr.Microphone(device_index=1) as source:
         audio = r.listen(source)
         try:
             text = r.recognize_google(audio, language='ko-KR')
@@ -178,7 +187,10 @@ f.close()
 # Porcupine으로 키워드 감지 후 STT 함수 비동기 실행
 async def detect_keyword():
     ## Mic Setting (device_index 변경해야함)
-    ### devices = PvRecorder.get_available_devices()
+    
+    # devices = PvRecorder.get_available_devices()
+    # print(devices)
+    
     recorder = PvRecorder(frame_length=512, device_index=1)
     recorder.start()
     while True:
@@ -207,7 +219,3 @@ async def main():
 # 비동기 루프 실행
 if __name__ == '__main__':
     asyncio.run(main())
-        
-        
-        
-        
