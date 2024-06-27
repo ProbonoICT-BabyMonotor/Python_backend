@@ -9,11 +9,12 @@
 #####################################################################
 
 
-import os, sys, json, random
+import os, sys, json, random, time
 from urllib import request
 from bs4 import BeautifulSoup
 import asyncio
 from chatGPT import callChatGPT
+from function import baby_sleep, bed_function, sensor
 
 try :
     import speech_recognition as sr                                                          
@@ -62,7 +63,7 @@ async def my_tts(text):
 # 예시: STT 함수 내부에서 비동기로 my_tts 호출
 async def STT():
     r = sr.Recognizer()
-    with sr.Microphone(device_index=1) as source:
+    with sr.Microphone(device_index=2) as source:
         audio = r.listen(source)
         try:
             text = r.recognize_google(audio, language='ko-KR')
@@ -137,8 +138,44 @@ async def baby(speech):
     await my_tts(future2.result())
 
 ### 판단 #############################################################
-async def ai(speech) :                                                                                                                                                    #
-    if '뉴스' in speech :                                                           
+async def ai(speech) :    
+    #-------------------  침대 제어  -----------------------#
+    ## 역류 방지
+    if ('역류 방지' in speech and '켜' in speech) or '기울여' in speech:
+        bed_function.backdraft()
+    
+    ## 트름 유도
+    elif ('트름' in speech and '시켜줘' in speech) or ('트림' in speech and '시켜줘' in speech) or '트름 유도' in speech or '트림 유도' in speech:
+        bed_function.burp()
+    
+    ## 침대 스윙    
+    elif '스윙' in speech or '재워줘' in speech:
+        bed_function.swing()
+    
+    ## 침대 고정
+    elif '고정' in speech and '침대' in speech:
+        bed_function.fix()
+    
+    #------------------- 수면 상태 (AI) -----------------------#
+    ## 아기 수면 상태 체크
+    elif ('자고 있어' in speech or '깨어 있어' in speech or '자는 중' in speech or '자니' in speech):
+        baby_sleep.babySleep()
+    
+    ## ChatGPT
+    elif ('인공' in speech and '지능' in speech) or 'ai' in speech or 'AI' in speech or 'gpt' in speech:
+        await baby(speech)    
+    
+    #-------------------    센서    -----------------------#
+    ## 현재 아기 상태 체크
+    elif (('지금 아기' in speech and '어때' in speech) or ('지금 아이' in speech and '어때' in speech) or ('지금 아기' in speech and '상태' in speech and '어때' in speech) or ('지금 아이' in speech and '상태' in speech and '어때' in speech)):
+        sensor.babyStatus()
+    
+    ## 주변 환경 체크
+    elif ((('방 온도' in speech or '방 습도' in speech) and '어때' in speech) or (('온도' in speech or '습도' in speech) and '어떻게' in speech) or ('환경' in speech and '체크' in speech)):
+        sensor.surroundings()
+    
+    #-------------------    기타    -----------------------#
+    elif '뉴스' in speech :                                                           
         texts = my_news()                                                           
         await my_tts('오늘 주요 뉴스입니다.')                                             
         for text in texts[0:5] :                                                    
@@ -151,7 +188,7 @@ async def ai(speech) :                                                          
     elif '운세' in speech :                                                         
         await my_tts(fortune())   
         
-    elif '농담' in speech :                                                         
+    elif '농담' in speech or '개그' in speech or '조크' in speech or '웃긴 얘기' in speech :                                                         
         f = open("joke.txt", "r", encoding="utf8")                                  
         lines = f.readlines()                                                       
         rnd = random.randint(0,len(lines)-1)                                        
@@ -161,9 +198,6 @@ async def ai(speech) :                                                          
         await my_tts(q)                                                                   
         await my_tts(a)
 
-    elif '아기' in speech:
-        await baby(speech)
-    
     elif '종료' in speech :                                                         
         await my_tts("다음에 또 만나요")                                                 
     
