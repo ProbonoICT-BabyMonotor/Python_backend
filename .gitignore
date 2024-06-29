@@ -1,5 +1,6 @@
 __pycache__
 access_key.json
+server_config.json
 
 *.pv
 *.ppn

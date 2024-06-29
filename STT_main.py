@@ -7,7 +7,8 @@
 ##
 ## 노트북 자체 마이크는 절대 안됨!! 소음 때문인지도..
 #####################################################################
-
+pv_device_number = 0
+tts_device_number = 1
 
 import os, sys, json, random, time
 from urllib import request
@@ -63,7 +64,7 @@ async def my_tts(text):
 # 예시: STT 함수 내부에서 비동기로 my_tts 호출
 async def STT():
     r = sr.Recognizer()
-    with sr.Microphone(device_index=2) as source:
+    with sr.Microphone(device_index=tts_device_number) as source:
         audio = r.listen(source)
         try:
             text = r.recognize_google(audio, language='ko-KR')
@@ -138,41 +139,66 @@ async def baby(speech):
     await my_tts(future2.result())
 
 ### 판단 #############################################################
-async def ai(speech) :    
+async def ai(speech) :
+    speech = speech.replace(" ", "")
     #-------------------  침대 제어  -----------------------#
     ## 역류 방지
-    if ('역류 방지' in speech and '켜' in speech) or '기울여' in speech:
-        bed_function.backdraft()
+    if ('역류방지켜' in speech) or '기울여' in speech:
+        await my_tts('네. 잠시만 기다려주세요.')
+        status = bed_function.backdraft()
+        
+        if status == 200:
+            await my_tts("침대 역류 방지 기능을 켰어요")
+        elif status == 500:
+            await my_tts("현재 침대와의 연결 상태가 좋지 않아요.")
     
     ## 트름 유도
-    elif ('트름' in speech and '시켜줘' in speech) or ('트림' in speech and '시켜줘' in speech) or '트름 유도' in speech or '트림 유도' in speech:
-        bed_function.burp()
+    elif ('트름시켜줘' in speech) or ('트림시켜줘' in speech) or '트름유도' in speech or '트림유도' in speech:
+        await my_tts('네. 잠시만 기다려주세요.')
+        status = bed_function.burp()
+        
+        if status == 200:
+            await my_tts("아기 트름을 시키고 있는 중이에요")
+        elif status == 500:
+            await my_tts("현재 침대와의 연결 상태가 좋지 않아요.")
     
     ## 침대 스윙    
     elif '스윙' in speech or '재워줘' in speech:
-        bed_function.swing()
-    
+        await my_tts('네. 잠시만 기다려주세요.')
+        status = bed_function.swing()
+        
+        if status == 200:
+            await my_tts("아기를 재우고 있어요")
+        elif status == 500:
+            await my_tts("현재 침대와의 연결 상태가 좋지 않아요.")
+            
     ## 침대 고정
     elif '고정' in speech and '침대' in speech:
-        bed_function.fix()
-    
+        await my_tts('네. 잠시만 기다려주세요.')
+        status = bed_function.fix()
+
+        if status == 200:
+            await my_tts("침대를 고정할게요")
+        elif status == 500:
+            await my_tts("현재 침대와의 연결 상태가 좋지 않아요.")
+            
     #------------------- 수면 상태 (AI) -----------------------#
     ## 아기 수면 상태 체크
-    elif ('자고 있어' in speech or '깨어 있어' in speech or '자는 중' in speech or '자니' in speech):
-        baby_sleep.babySleep()
+    elif ('자고있어' in speech or '깨어있어' in speech or '자는중' in speech or '자니' in speech):
+        status = baby_sleep.babySleep()
     
     ## ChatGPT
-    elif ('인공' in speech and '지능' in speech) or 'ai' in speech or 'AI' in speech or 'gpt' in speech:
+    elif ('인공지능' in speech) or 'ai' in speech or 'AI' in speech or 'gpt' in speech:
         await baby(speech)    
     
     #-------------------    센서    -----------------------#
     ## 현재 아기 상태 체크
-    elif (('지금 아기' in speech and '어때' in speech) or ('지금 아이' in speech and '어때' in speech) or ('지금 아기' in speech and '상태' in speech and '어때' in speech) or ('지금 아이' in speech and '상태' in speech and '어때' in speech)):
-        sensor.babyStatus()
+    elif (('지금아기어때' in speech) or ('지금아이어때' in speech) or ('지금아기상태어때' in speech) or ('지금아이상태어때' in speech)):
+        status = sensor.babyStatus()
     
     ## 주변 환경 체크
-    elif ((('방 온도' in speech or '방 습도' in speech) and '어때' in speech) or (('온도' in speech or '습도' in speech) and '어떻게' in speech) or ('환경' in speech and '체크' in speech)):
-        sensor.surroundings()
+    elif ((('방온도' in speech or '방습도' in speech) and '어때' in speech) or (('온도' in speech or '습도' in speech) and '어떻게' in speech) or ('환경체크' in speech)):
+        status = sensor.surroundings()
     
     #-------------------    기타    -----------------------#
     elif '뉴스' in speech :                                                           
@@ -225,7 +251,7 @@ async def detect_keyword():
     # devices = PvRecorder.get_available_devices()
     # print(devices)
     
-    recorder = PvRecorder(frame_length=512, device_index=1)
+    recorder = PvRecorder(frame_length=512, device_index=pv_device_number)
     recorder.start()
     while True:
         pcm = recorder.read()
@@ -234,7 +260,7 @@ async def detect_keyword():
             recorder.delete()
             await my_tts("무엇을 도와드릴까요?")
             await STT()
-            recorder = PvRecorder(frame_length=512, device_index=1)
+            recorder = PvRecorder(frame_length=512, device_index=pv_device_number)
             recorder.start()
 
 # 비동기 루프 시작
