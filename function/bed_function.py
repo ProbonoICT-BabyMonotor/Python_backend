@@ -3,19 +3,19 @@ from function import http_request_spring
 
 # 역류 방지 기능
 def backdraft():
-    return http_request_spring.getRequest('chatbot/bed/backdraft')
+    return http_request_spring.getRequest('/chatbot/bed/backdraft')
 
 # 트름 유도 기능
 def burp():
-    return http_request_spring.getRequest('chatbot/bed/burp')
+    return http_request_spring.getRequest('/chatbot/bed/burp')
 
 # 스윙 기능
 def swing():
-    return http_request_spring.getRequest('chatbot/bed/swing')
+    return http_request_spring.getRequest('/chatbot/bed/swing')
 
 # 고정 기능
 def fix():
-    return http_request_spring.getRequest('chatbot/bed/fix')
+    return http_request_spring.getRequest('/chatbot/bed/fix')
 
 # 회전 기능
 def spin():

@@ -5,8 +5,8 @@ ip = json.load(f)["ip"]
     
 # GET 요청 보내기
 def getRequest(goto):
-    response = requests.get(ip+goto+"?memberNumber="+str(6))
-    # print(response.json())       # JSON 응답 출력
+    response = requests.get(ip+goto+"?memberNumber="+str(9))
+    print(response.json())       # JSON 응답 출력
     return response.status_code
 
 # POST 요청 보내기 [추후 수정 필요]
