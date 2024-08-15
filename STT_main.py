@@ -7,8 +7,6 @@
 ##
 ## 노트북 자체 마이크는 절대 안됨!! 소음 때문인지도..
 #####################################################################
-pv_device_number = 0
-tts_device_number = 1
 
 import os, sys, json, random, time
 from urllib import request
@@ -37,6 +35,17 @@ except ImportError :
     sys.exit() 
 
 print("[대기] 잠시만 기다려주세요..")
+
+# 마이크 자동 설정 
+devices = PvRecorder.get_available_devices()
+for idx, val in enumerate(devices): 
+    if "PCM2902" in val:
+        pv_device_number = idx
+
+recog = sr.Microphone.list_microphone_names()
+for idx, val in enumerate(recog):
+    if "USB PnP Sound Device" in val:
+        tts_device_number = idx
 
 ## API Key Setting
 f = open('access_key.json')
@@ -70,11 +79,12 @@ async def STT():
             text = r.recognize_google(audio, language='ko-KR')
             print('You said: {}'.format(text))
             await ai(text)  # ai 함수에서 my_tts를 호출할 때는 await 사용
-        except Exception as err:
+        except ValueError as err:
             print(err)
             await my_tts("잘 못 들었어요. 다시 말해주세요.")
             await STT()
-
+        except ConnectionError:
+            await my_tts("침대와의 연결에 실패했어요. 다음에 다시 시도해주세요.")
 
 ### 뉴스 #############################################################
 def my_news() :                                               
@@ -234,12 +244,12 @@ async def ai(speech) :
 ## Wake word Setting
 porcupine = pvporcupine.create(
     access_key = data['key'],
-    keyword_paths=[os.getcwd()+"\안녕_ko_windows_v3_0_0.ppn"],
-    model_path=os.getcwd()+"\porcupine_params_ko.pv",
+    keyword_paths=[os.getcwd()+"/안녕_ko_raspberry-pi_v3_0_0.ppn"],
+    model_path=os.getcwd()+"/porcupine_params_ko.pv",
 )
 
 ## STT Setting
-leopard = pvleopard.create(access_key = data['key'], model_path=os.getcwd()+"\leopard_params_ko.pv")
+leopard = pvleopard.create(access_key = data['key'], model_path=os.getcwd()+"/leopard_params_ko.pv")
 
 f.close()
 
@@ -270,8 +280,9 @@ async def main():
     file_path = os.path.abspath(file_name)
 
     # 비동기적으로 재생
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, playsound, file_path)
+    # loop = asyncio.get_event_loop()
+    # await loop.run_in_executor(None, playsound, file_path)
+    playsound(file_path)
     print("[실행 가능] 마이크가 준비되었습니다")
     
     await detect_keyword()

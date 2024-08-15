@@ -22,8 +22,8 @@ def test_pvrecorder():
     ## Wake word Setting
     porcupine = pvporcupine.create(
         access_key = data['key'],
-        keyword_paths=[os.getcwd()+"\안녕_ko_windows_v3_0_0.ppn"],
-        model_path=os.getcwd()+"\porcupine_params_ko.pv",
+        keyword_paths=[os.getcwd()+"/안녕_ko_raspberry-pi_v3_0_0.ppn"],
+        model_path=os.getcwd()+"/porcupine_params_ko.pv",
     )
     
     devices = PvRecorder.get_available_devices()
