@@ -5,3 +5,5 @@ server_config.json
 *.pv
 *.ppn
 *.mp3
+
+nohup.out
