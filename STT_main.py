@@ -191,7 +191,13 @@ async def ai(speech) :
             await my_tts("침대를 고정할게요")
         elif status == 500:
             await my_tts("현재 침대와의 연결 상태가 좋지 않아요.")
-            
+    
+    ## 아기 뒤집기
+    elif '뒤집어' in speech and '아기' in speech:
+        await my_tts('네. 잠시만 기다려주세요.')
+        time.sleep(15)
+
+        await my_tts("아기를 뒤집었어요. 아기가 바른 상태로 자는지 확인해주세요.")    
     #------------------- 수면 상태 (AI) -----------------------#
     ## 아기 수면 상태 체크
     elif ('자고있어' in speech or '깨어있어' in speech or '자는중' in speech or '자니' in speech):
