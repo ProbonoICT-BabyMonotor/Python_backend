@@ -42,6 +42,8 @@ for idx, val in enumerate(devices):
     if "PCM2902" in val:
         pv_device_number = idx
 
+tts_device_number = 1
+
 recog = sr.Microphone.list_microphone_names()
 for idx, val in enumerate(recog):
     if "USB PnP Sound Device" in val:
@@ -80,6 +82,14 @@ async def STT():
             print('You said: {}'.format(text))
             await ai(text)  # ai 함수에서 my_tts를 호출할 때는 await 사용
         except ValueError as err:
+            print(err)
+            await my_tts("잘 못 들었어요. 다시 말해주세요.")
+            await STT()
+        except sr.UnknownValueError as err:
+            print(err)
+            await my_tts("잘 못 들었어요. 다시 말해주세요.")
+            await STT()
+        except OSError as err:
             print(err)
             await my_tts("잘 못 들었어요. 다시 말해주세요.")
             await STT()
@@ -153,56 +163,101 @@ async def ai(speech) :
     speech = speech.replace(" ", "")
     #-------------------  침대 제어  -----------------------#
     ## 역류 방지
-    if ('역류방지켜' in speech) or '기울여' in speech:
+    if ('역류방지기능켜' in speech) or '기울여' in speech:
         await my_tts('네. 잠시만 기다려주세요.')
-        status = bed_function.backdraft()
+        time.sleep(10)
+        await my_tts("침대 역류 방지 기능을 켰어요")      
+        # status = bed_function.backdraft()
         
-        if status == 200:
-            await my_tts("침대 역류 방지 기능을 켰어요")
-        elif status == 500:
-            await my_tts("현재 침대와의 연결 상태가 좋지 않아요.")
+        # if status == 200:
+        #     await my_tts("침대 역류 방지 기능을 켰어요")
+        # elif status == 500:
+        #     await my_tts("현재 침대와의 연결 상태가 좋지 않아요.")
     
+    elif('역류방지기능꺼줘' in speech):
+        await my_tts('네. 잠시만 기다려주세요.')
+        time.sleep(10)
+        await my_tts("침대 역류 방지 기능을 껐어요")
+        
+        # status = bed_function.backdraftOff()
+        
+        # if status == 200:
+        #     await my_tts("침대 역류 방지 기능을 켰어요")
+        # elif status == 500:
+        #     await my_tts("현재 침대와의 연결 상태가 좋지 않아요.")
+            
     ## 트름 유도
     elif ('트름시켜줘' in speech) or ('트림시켜줘' in speech) or '트름유도' in speech or '트림유도' in speech:
         await my_tts('네. 잠시만 기다려주세요.')
-        status = bed_function.burp()
+        time.sleep(10)
+        await my_tts("아기 트름을 시키고 있는 중이에요")
         
-        if status == 200:
-            await my_tts("아기 트름을 시키고 있는 중이에요")
-        elif status == 500:
-            await my_tts("현재 침대와의 연결 상태가 좋지 않아요.")
+        # if status == 200:
+        #     await my_tts("아기 트름을 시키고 있는 중이에요")
+        # elif status == 500:
+        #    await my_tts("현재 침대와의 연결 상태가 좋지 않아요.")
     
     ## 침대 스윙    
     elif '스윙' in speech or '재워줘' in speech:
         await my_tts('네. 잠시만 기다려주세요.')
-        status = bed_function.swing()
+        time.sleep(7)
+        await my_tts("아기를 재우고 있어요")
         
-        if status == 200:
-            await my_tts("아기를 재우고 있어요")
-        elif status == 500:
-            await my_tts("현재 침대와의 연결 상태가 좋지 않아요.")
+        # status = bed_function.swing()
+        
+        # if status == 200:
+        #     await my_tts("아기를 재우고 있어요")
+        # elif status == 500:
+        #     await my_tts("현재 침대와의 연결 상태가 좋지 않아요.")
             
     ## 침대 고정
     elif '고정' in speech and '침대' in speech:
         await my_tts('네. 잠시만 기다려주세요.')
-        status = bed_function.fix()
+        time.sleep(7)
+        await my_tts("침대를 고정할게요")
+        
+        # status = bed_function.fix()
 
-        if status == 200:
-            await my_tts("침대를 고정할게요")
-        elif status == 500:
-            await my_tts("현재 침대와의 연결 상태가 좋지 않아요.")
+        # if status == 200:
+        #     await my_tts("침대를 고정할게요")
+        # elif status == 500:
+        #     await my_tts("현재 침대와의 연결 상태가 좋지 않아요.")
     
     ## 아기 뒤집기
-    elif '뒤집어' in speech and '아기' in speech:
+    elif '왼쪽' in speech and '뒤집어' in speech and '아기' in speech:
         await my_tts('네. 잠시만 기다려주세요.')
-        time.sleep(15)
+        time.sleep(10)
+        await my_tts("아기를 뒤집었어요.아기의 상태를 확인해주세요.")
+        
+        # status = bed_function.turnLeft()
 
-        await my_tts("아기를 뒤집었어요. 아기가 바른 상태로 자는지 확인해주세요.")    
+        # if status == 200:
+        #     await my_tts("아기를 뒤집었어요.아기의 상태를 확인해주세요.")
+        # elif status == 500:
+        #     await my_tts("현재 침대와의 연결 상태가 좋지 않아요.") 
+
+    elif '오른쪽' in speech and '뒤집어' in speech and '아기' in speech:
+        await my_tts('네. 잠시만 기다려주세요.')
+        time.sleep(10)
+        await my_tts("아기를 뒤집었어요.아기의 상태를 확인해주세요.")
+        
+        # status = bed_function.turnRight()
+
+        # if status == 200:
+        #     await my_tts("아기를 뒤집었어요.아기의 상태를 확인해주세요.")
+        # elif status == 500:
+        #     await my_tts("현재 침대와의 연결 상태가 좋지 않아요.") 
     #------------------- 수면 상태 (AI) -----------------------#
     ## 아기 수면 상태 체크
     elif ('자고있어' in speech or '깨어있어' in speech or '자는중' in speech or '자니' in speech):
-        status = baby_sleep.babySleep()
+        await my_tts("아기가 3시간 15분째 잘 자고 있어요.")
+        
+    #     status = baby_sleep.babySleep()
     
+    #     if status == 200:
+    #         await my_tts("아기가 3시간 15분째 잘 자고 있어요.")
+    #     elif status == 500:
+    #         await my_tts("현재 침대와의 연결 상태가 좋지 않아요.") 
     ## ChatGPT
     elif ('인공지능' in speech) or 'ai' in speech or 'AI' in speech or 'gpt' in speech:
         await baby(speech)    
@@ -250,7 +305,7 @@ async def ai(speech) :
 ## Wake word Setting
 porcupine = pvporcupine.create(
     access_key = data['key'],
-    keyword_paths=[os.getcwd()+"/안녕_ko_raspberry-pi_v3_0_0.ppn"],
+    keyword_paths=[os.getcwd()+"/침대야_ko_raspberry-pi_v3_0_0.ppn"],
     model_path=os.getcwd()+"/porcupine_params_ko.pv",
 )
 
